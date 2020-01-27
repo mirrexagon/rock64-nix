@@ -82,7 +82,8 @@ in
         export img=$out/sd-image/${config.sdImage.imageName}
 
         echo "${pkgs.stdenv.system}" > $out/nix-support/system
-        echo "file sd-image $img.xz" >> $out/nix-support/hydra-build-products
+        #echo "file sd-image $img.xz" >> $out/nix-support/hydra-build-products
+        echo "file sd-image $img" >> $out/nix-support/hydra-build-products
 
         # Create the image file sized to fit /, plus 20M of slack
         rootSizeBlocks=$(du -B 512 --apparent-size ${rootfsImage} | awk '{ print $1 }')
@@ -104,7 +105,7 @@ in
         eval $(partx $img -o START,SECTORS --nr 2 --pairs)
         dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS status=progress
 
-        xz --threads 0 $img
+        #xz --threads 0 $img
       '';
     };
 
