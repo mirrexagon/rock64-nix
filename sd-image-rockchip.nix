@@ -97,12 +97,12 @@ in
         EOF
 
         # Copy the bootloader to the specific locations
-	dd if=${config.sdImage.bootloader}/idbloader.img of=$img conv=notrunc bs=512 seek=64
-	dd if=${config.sdImage.bootloader}/u-boot.itb of=$img conv=notrunc bs=512 seek=16384
+        dd if=${config.sdImage.bootloader}/idbloader.img of=$img conv=notrunc bs=512 seek=64 status=progress
+        dd if=${config.sdImage.bootloader}/u-boot.itb of=$img conv=notrunc bs=512 seek=16384 status=progress
 
         # Copy the rootfs into the SD image
         eval $(partx $img -o START,SECTORS --nr 2 --pairs)
-        dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS
+        dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS status=progress
 
         xz --threads 0 $img
       '';
