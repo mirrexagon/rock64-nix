@@ -16,7 +16,7 @@ with lib;
 let
   rootfsImage = pkgs.callPackage ./make-ext4-fs.nix {
     inherit (config.sdImage) storePaths installPaths;
-    volumeLabel = "NIXOS_SD";
+    volumeLabel = "NIXOS_ROOT";
   };
 in
 {
@@ -52,8 +52,8 @@ in
     };
 
     bootloader = mkOption {
-      type = types.string;
-      example = literalExample "\${idbloader}/idbloader.img";
+      type = types.package;
+      example = literalExample "pkgs.ubootRockPro64";
       description = ''
         bootloader to be included in the generated SD image.
       '';
@@ -63,7 +63,7 @@ in
   config = {
     fileSystems = {
       "/" = {
-        device = "/dev/disk/by-label/NIXOS_SD";
+        device = "/dev/disk/by-label/NIXOS_ROOT";
         fsType = "ext4";
       };
     };
@@ -93,13 +93,12 @@ in
             label: gpt
             label-id: $diskUUID
             first-lba: 64
-            start=64,   size=8000, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=$bootUUID, name=uboot
-            start=8192,            type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=$rootUUID, name=NIX_SD, attrs=LegacyBIOSBootable
+            start=32768,            type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=$rootUUID, name=NIX_ROOT, attrs=LegacyBIOSBootable
         EOF
 
-        # Copy the bootloader to the SD image start
-        eval $(partx $img -o START,SECTORS --nr 1 --pairs)
-        dd conv=notrunc if=${config.sdImage.bootloader} of=$img seek=$START count=$SECTORS
+        # Copy the bootloader to the specific locations
+	dd if=${config.sdImage.bootloader}/idbloader.img of=$img conv=notrunc bs=512 seek=64
+	dd if=${config.sdImage.bootloader}/u-boot.itb of=$img conv=notrunc bs=512 seek=16384
 
         # Copy the rootfs into the SD image
         eval $(partx $img -o START,SECTORS --nr 2 --pairs)
@@ -113,7 +112,7 @@ in
       # On the first boot do some maintenance tasks
       if [ -f /nix-path-registration ]; then
         # Figure out device names for the boot device and root filesystem.
-        rootPart=$(readlink -f /dev/disk/by-label/NIXOS_SD)
+        rootPart=$(readlink -f /dev/disk/by-label/NIXOS_ROOT)
         bootDevice=$(lsblk -npo PKNAME $rootPart)
 
         # Recreate the current partition table without the length limit

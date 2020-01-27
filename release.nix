@@ -13,7 +13,7 @@ let
 in
 
 with (import (nixpkgs+"/nixos/lib/eval-config.nix") {
-  modules = [ ./sd-image-rock64.nix versionModule ];
+  modules = [ ./sd-image-rockpro64.nix versionModule ];
 });
 
 {
