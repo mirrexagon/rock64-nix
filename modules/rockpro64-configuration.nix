@@ -6,11 +6,6 @@
 
   boot.kernelParams = [
     "earlycon=uart8250,mmio32,0xff1a0000"
-    "coherent_pool=1M"
-    "ethaddr=\${ethaddr}"
-    "eth1addr=\${eth1addr}"
-    "serial=\${serial#}"
-
     "console=uart8250,mmio32,0xff1a0000"
     "console=tty1"
   ];
