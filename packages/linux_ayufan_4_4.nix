@@ -6,13 +6,13 @@ assert features == {};
 let
   passthru = { features = {}; };
 
-  version = "4.4.138-1094-rockchip-ayufan";
+  version = "4.4.190-1233-rockchip-ayufan";
 
   src = fetchFromGitHub {
     owner = "ayufan-rock64";
     repo = "linux-kernel";
     rev = version;
-    sha256 = "0b5f15xdss48vjn71wcaiqmpmnfx4ccrcdrj5zbv1cb6d9zgx2cg";
+    sha256 = "1565q699qjn9vcnf1b2vyw406lhfn3vqybq425nx5f2c6psr236b";
   };
 
   extraOptions = {
@@ -47,7 +47,7 @@ let
     inherit src;
 
     inherit version;
-    modDirVersion = "4.4.138";
+    modDirVersion = "4.4.190";
 
     inherit configfile;
 
