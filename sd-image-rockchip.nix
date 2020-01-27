@@ -16,7 +16,7 @@ with lib;
 let
   rootfsImage = pkgs.callPackage ./make-ext4-fs.nix {
     inherit (config.sdImage) storePaths installPaths;
-    volumeLabel = "NIXOS_ROOT";
+    volumeLabel = "NIXOS_SD";
   };
 in
 {
@@ -63,7 +63,7 @@ in
   config = {
     fileSystems = {
       "/" = {
-        device = "/dev/disk/by-label/NIXOS_ROOT";
+        device = "/dev/disk/by-label/NIXOS_SD";
         fsType = "ext4";
       };
     };
@@ -94,7 +94,8 @@ in
             label: gpt
             label-id: $diskUUID
             first-lba: 64
-            start=32768,            type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=$rootUUID, name=NIX_ROOT, attrs=LegacyBIOSBootable
+            start=64,   size=8000, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=$bootUUID, name=uboot
+            start=32768,            type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=$rootUUID, name=NIX_SD, attrs=LegacyBIOSBootable
         EOF
 
         # Copy the bootloader to the specific locations
@@ -102,7 +103,7 @@ in
         dd if=${config.sdImage.bootloader}/u-boot.itb of=$img conv=notrunc bs=512 seek=16384 status=progress
 
         # Copy the rootfs into the SD image
-        eval $(partx $img -o START,SECTORS --nr 1 --pairs)
+        eval $(partx $img -o START,SECTORS --nr 2 --pairs)
         dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS status=progress
 
         #xz --threads 0 $img
@@ -113,14 +114,14 @@ in
       # On the first boot do some maintenance tasks
       if [ -f /nix-path-registration ]; then
         # Figure out device names for the boot device and root filesystem.
-        rootPart=$(readlink -f /dev/disk/by-label/NIXOS_ROOT)
+        rootPart=$(readlink -f /dev/disk/by-label/NIXOS_SD)
         bootDevice=$(lsblk -npo PKNAME $rootPart)
 
         # Recreate the current partition table without the length limit
         sfdisk -d $bootDevice | ${pkgs.gnugrep}/bin/grep -v '^last-lba:' | sfdisk --no-reread $bootDevice
 
         # Resize the root partition and the filesystem to fit the disk
-        echo ",+," | sfdisk -N1 --no-reread $bootDevice
+        echo ",+," | sfdisk -N2 --no-reread $bootDevice
         ${pkgs.parted}/bin/partprobe
         ${pkgs.e2fsprogs}/bin/resize2fs $rootPart
 
