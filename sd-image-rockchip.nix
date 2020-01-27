@@ -102,7 +102,7 @@ in
         dd if=${config.sdImage.bootloader}/u-boot.itb of=$img conv=notrunc bs=512 seek=16384 status=progress
 
         # Copy the rootfs into the SD image
-        eval $(partx $img -o START,SECTORS --nr 2 --pairs)
+        eval $(partx $img -o START,SECTORS --nr 1 --pairs)
         dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS status=progress
 
         #xz --threads 0 $img
